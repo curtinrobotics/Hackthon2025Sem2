@@ -1,10 +1,8 @@
 import sys, serial
-from sqlalchemy import case, false, true
-
-from main import zone
+#from sqlalchemy import case, False, True
 
 class Arduino:
-    def __init__(self, port: str = "", baudRate: int = 9600) -> none:
+    def __init__(self, port: str = "", baudRate: int = 9600) -> None:
         self.baudRate = baudRate
         if port != "":
             self.port = port
@@ -12,8 +10,9 @@ class Arduino:
             self.port = self.selectPort()
         self.coms = serial.Serial(self.port, baudrate=self.baudRate, timeout=.1)
 
-    def write(tent_light_letter: str, zone_name: str, object_letter, enable: bool) -> none:
-
+    def write(self, tent_light_letter: str, zone_name: str, object_letter, enable: bool) -> None:
+        zone_letter = "A"
+        enable_letter = "d"
         match zone_name:
             case "archipelago":
                 zone_letter = "A"
@@ -36,7 +35,7 @@ class Arduino:
         self.coms.write(bytes('\n', encoding='utf-8'))
 
 
-    def selectPort() -> none:
+    def selectPort() -> None:
         ports = serial.tools.list_ports.comports()
         validPorts = [port for port in ports if port.hwid != 'n/a']
 
@@ -57,62 +56,63 @@ class Arduino:
         print(f"selecting: {selectedPort.device}")
         return selectedPort.device
 
-# arduinos: dict[arduino] = {"map": none, "kraken": none, "skyAnimation": none, "atmosphere": none, "zombies": none, "roughSeas": none, "volcanoe": none, "navy": none}
-main_arduino = Arduino("COM6", 9600)
+# arduinos: dict[arduino] = {"map": None, "kraken": None, "skyAnimation": None, "atmosphere": None, "zombies": None, "roughSeas": None, "volcanoe": None, "navy": None}
 
-def update_lights(zone_name: str, state: str) -> none:
+main_arduino = Arduino("COM16", 9600)
+
+def update_lights(zone_name: str, state: str) -> None:
     match state:
         case "normal":
-            main_arduino.write("l", zone_name, "k", false)
-            main_arduino.write("l", zone_name, "t", false)
-            main_arduino.write("l", zone_name, "z", false)
+            main_arduino.write("l", zone_name, "k", False)
+            main_arduino.write("l", zone_name, "t", False)
+            main_arduino.write("l", zone_name, "z", False)
         case "goldenHour":
-            main_arduino.write("l", zone_name, "k", false)
-            main_arduino.write("l", zone_name, "t", true)
-            main_arduino.write("l", zone_name, "z", false)
+            main_arduino.write("l", zone_name, "k", False)
+            main_arduino.write("l", zone_name, "t", True)
+            main_arduino.write("l", zone_name, "z", False)
         case "zombiePirates":
-            main_arduino.write("l", zone_name, "k", false)
-            main_arduino.write("l", zone_name, "t", false)
-            main_arduino.write("l", zone_name, "z", true)
+            main_arduino.write("l", zone_name, "k", False)
+            main_arduino.write("l", zone_name, "t", False)
+            main_arduino.write("l", zone_name, "z", True)
         case "kraken":
-            main_arduino.write("l", zone_name, "k", true)
-            main_arduino.write("l", zone_name, "t", false)
-            main_arduino.write("l", zone_name, "z", false)
+            main_arduino.write("l", zone_name, "k", True)
+            main_arduino.write("l", zone_name, "t", False)
+            main_arduino.write("l", zone_name, "z", False)
         case "zombieKraken":
-            main_arduino.write("l", zone_name, "k", true)
-            main_arduino.write("l", zone_name, "t", false)
-            main_arduino.write("l", zone_name, "z", true)
+            main_arduino.write("l", zone_name, "k", True)
+            main_arduino.write("l", zone_name, "t", False)
+            main_arduino.write("l", zone_name, "z", True)
         case "goldenZombie":
-            main_arduino.write("l", zone_name, "k", false)
-            main_arduino.write("l", zone_name, "t", true)
-            main_arduino.write("l", zone_name, "z", true)
+            main_arduino.write("l", zone_name, "k", False)
+            main_arduino.write("l", zone_name, "t", True)
+            main_arduino.write("l", zone_name, "z", True)
         case "goldenKraken":
-            main_arduino.write("l", zone_name, "k", true)
-            main_arduino.write("l", zone_name, "t", true)
-            main_arduino.write("l", zone_name, "z", false)
+            main_arduino.write("l", zone_name, "k", True)
+            main_arduino.write("l", zone_name, "t", True)
+            main_arduino.write("l", zone_name, "z", False)
         case "goldenZombieKraken":
-            main_arduino.write("l", zone_name, "k", true)
-            main_arduino.write("l", zone_name, "t", true)
-            main_arduino.write("l", zone_name, "z", true)
+            main_arduino.write("l", zone_name, "k", True)
+            main_arduino.write("l", zone_name, "t", True)
+            main_arduino.write("l", zone_name, "z", True)
 
-def update_tentacles(zone_name: str, state: str) -> none:
+def update_tentacles(zone_name: str, state: str) -> None:
     match state:
         case "normal":
-            main_arduino.write("t", zone_name, "0", false)
+            main_arduino.write("t", zone_name, "0", False)
         case "goldenHour":
-            main_arduino.write("t", zone_name, "0", false)
+            main_arduino.write("t", zone_name, "0", False)
         case "zombiePirates":
-            main_arduino.write("t", zone_name, "0", false)
+            main_arduino.write("t", zone_name, "0", False)
         case "kraken":
-            main_arduino.write("t", zone_name, "0", true)
+            main_arduino.write("t", zone_name, "0", True)
         case "zombieKraken":
-            main_arduino.write("t", zone_name, "0", true)
+            main_arduino.write("t", zone_name, "0", True)
         case "goldenZombie":
-            main_arduino.write("t", zone_name, "0", false)
+            main_arduino.write("t", zone_name, "0", False)
         case "goldenKraken":
-            main_arduino.write("t", zone_name, "0", true)
+            main_arduino.write("t", zone_name, "0", True)
         case "goldenZombieKraken":
-            main_arduino.write("t", zone_name, "0", true)
+            main_arduino.write("t", zone_name, "0", True)
 
 class NoValidPortError(Exception):
     """Exception raised when no valid Arduino ports are found."""

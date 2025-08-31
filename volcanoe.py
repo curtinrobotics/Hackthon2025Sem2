@@ -1,15 +1,15 @@
 from main import zone
 class volcanoe(zone):
-    def __init__(name: str = "volcanoe", krakaenArms: list[int]) -> none:
+    def __init__(name: str = "volcanoe", krakaenArms: list[int]) -> None:
         super.__init__(name, krakaenArms)
 
-    def audio(filename: str) -> none:
+    def audio(filename: str) -> None:
         match filename:
             case: "erruption":
                 filename = filename + str(random(5))
         super().audio(filename)
 
-    def animation(ani: str) -> none:
+    def animation(ani: str) -> None:
         match ani:
             case "lavaFlow":
                 lavaFlow()
@@ -22,16 +22,16 @@ class volcanoe(zone):
             case _:
                 super().animation(ani)
 
-    def erruption(delay: int = 10000) -> none:
+    def erruption(delay: int = 10000) -> None:
         audio("erruption")
         smoke("On")
         arduino.update("volcanoe", self.name, "lava", "spew")
         time.sleep(delay)
         lavaFlow()
 
-    def lavaFLow() -> none:
+    def lavaFLow() -> None:
         smoke("Off")
         arduino.update("volcanoe", self.name, "lava", "spew")
 
-    def smoke(state: str) -> none:
+    def smoke(state: str) -> None:
         arduino.update("volcanoe", self.name, "smoke", state)
