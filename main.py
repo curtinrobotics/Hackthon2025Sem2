@@ -1,89 +1,43 @@
 from playsound import playsound
 import arduino
+import random
+import time
 
 class zone:
-    def __init__(name: str, krakaenArms: list[int], currentState: str = "normal", inidcators: dict[int] = ["normal": 1, "goldenHour": 2, "zombiePirates": 3, "kraken": 4, "zombieKraken": 5]) -> none:
+    def __init__(self, name: str, currentState: str = "normal") -> none:
         self.name: str = name
-        self.currentState: list[str] = currentState
-        self.tentacles: list[int] = krakenArms
-        self.indicators: dict[int] = indicators
+        self.currentState: str = currentState
 
     def audio(filename: str) -> none:
         match filename:
-            case: "krakenInjured":
+            case "krakenInjured":
                 filename = filename + str(random(5))
-            case: "krakenRoar":
+            case "krakenRoar":
                 filename = filename + str(random(3))
-            case: "tentacleCrash":
+            case "tentacleCrash":
                 filename = filename + str(random(10))
-            case: "heavenlyNoise":
+            case "heavenlyNoise":
                 filename = filename
-            case: "zombieGroan":
+            case "zombieGroan":
                 filename = filename + str(random(10))
-            case: "zombieDeath":
+            case "zombieDeath":
                 filename = filename + str(random(5))
-            case: "thunderCrash":
+            case "thunderCrash":
                 filename = filename + str(random(5))
-            case: "atmosphere":
+            case "atmosphere":
                 filename = filename + str(random(5))
-            case: "ambience":
+            case "ambience":
                 filename = filename + str(random(5))
-            case: "thunderCrash":
+            case "thunderCrash":
                 filename = filename
-            case: "thunderRoll":
+            case "thunderRoll":
                 filename = filename + str(random(5))
-            case: "themeMusic":
+            case "themeMusic":
                 filename = filename + str(random(5))
         playsound(filename + ".mp3")
 
-    def changeStates(states: list[str], warningTime: int = 5000) -> none:
-        for state in currentState:
-            if state in states:
-                states.pop(state)
-            else:
-                changeState(state, warningTime, "off")
-        for state in states:
-            changeState(state, warningTime, "on")
-
-    def changeState(state: str, warningTime: int = 5000, switch) -> none:
-        match state:
-            case "normal":
-                changeMap(state)
-            case "goldenHour":
-                changeMap(state)
-                time.sleep(warningTime)
-                if switch == "off":
-                    animation("goldenHourSets")
-                elif switch == "on":
-                    animation("goldenHourDawns")
-            case "zombiePirates":
-                changeMap(state)
-                time.sleep(warningTime)
-                if switch == "off":
-                    animation("zombiesRise")
-                elif switch == "on":
-                    animation("zombiesSlumber")
-            case "kraken":
-                changeMap(state)
-                time.sleep(warningTime)
-                if switch == "off":
-                    animation("krakenRetreat")
-                elif switch == "on":
-                    animation("krakenArise")
-            case "zombieKraken":
-                changeMap(state)
-                time.sleep(warningTime)
-                if switch == "off":
-                    animation("zombieKrakenRetreat")
-                elif switch == "on":
-                    animation("zombieKrakenArise")
-            case _:
-                print("state")
-
     def animation(ani: str) -> none:
         match ani:
-            case "tentacleWiggle":
-                wiggleTentacles()
             case "tentacleSlam":
                 slamTentacles()
             case "liftTentacles":
@@ -123,139 +77,466 @@ class zone:
             case _:
                 print("unkown animation")
 
+    def changeBoard(self) -> none:
+        arduino.update_tentacles(self.name, self.currentState)
+
     #generic animations and actions
-    def changeMap(state: str) -> none:
-        arduino.update("map", self.name, self.indicators[state], "stateChange")
+    def changeMap(self, state: str) -> none:
+        self.currentState = state
+        arduino.update_lights(self.name, self.currentState)
 
-    def wiggleTentacles() -> none:
-        for tentacle in self.tentacles:
-            self.wiggleTentacle(tentacle)
-
-    def wiggleTentacle(tentacle: int) -> none:
-        arduino.update("kraken", self.name, tentacle, "wiggle")
-
-    def slamTentacles(delay: int = 100) -> none:
-        order: list[num] = []
-        current = random(len(self.tentacles))
-        order.append(current)
-        for ii in range(len(self.tentacles)-2):
-            while current in order:
-                current = random(len(self.tentacles))
-            order.append(current)
-        for tentacle in self.tentacles:
-            if tentacle not in order:
-                order.append(tenatcle)
-        for tentacle in order:
-            self.slamTentacle(tentacle)
-            time.sleep(delay)
-
-    def slamTentacle(tentacle: int) -> none:
-        arduino.update("kraken", self.name, tentacle, "slam")
-        audio("tentacleCrash")
-
-    def liftTentacles() -> none:
-        for tentacle in self.tentacles:
-            self.liftTentacle(tentacle)
-
-    def liftTentacle(tentacle: int) -> none:
-        arduino.update("kraken", self.name, tentacle, "lift")
-
-    def TentacleChangeColour(colour: str = "purple") -> none:
-        arduino.update("kraken", self.name, "colour", colour)
-
-    def setGoldenHour(delay: int = 2000) -> none:
-        arduino.update("skyAnimation", self.name, "goldenLight", "flicker")
-        time.sleep(delay)
-        arduino.update("skyAnimation", self.name, "goldenLight", "off")
-
-    def dawnGoldenHour() -> none:
-        arduino.update("skyAnimation", self.name, "goldenLight", "on")
-        audio("heavenlyNoise")
-
-    def zombiesRise() -> none:
-        arduino.update("zombies", self.name, "zombieFigures", "up")
-        arduino.update("skyAnimation", self.name, "redLight", "on")
-        audio("zombieGroan")
-
-    def zombiesSlumber() -> none:
-        arduino.update("zombies", self.name, "zombieFigures", "off")
-        arduino.update("skyAnimation", self.name, "redLight", "down")
-        audio("zombieDeath")
-
-    def krakenRetreats() -> none:
-        wiggleTentacles()
-        liftTentacles()
-
-    def krakenArise() -> none:
-        wiggleTentacles()
-        audio("krakenRoar")
-        slamTentacles()
-
-    def damageKraken(tentacle: int) -> none:
-        audio("krakenInjured")
-        liftTentacle(tentacle)
-
-    def zombieKrakenRetreat(delay: int = 2000) -> none:
-        wiggleTentacles()
-        time.sleep()
-        liftTentacles()
-
-    def zombieKrakenArise() -> none:
-        wiggleTentacles()
-        audio("krakenRoar")
-        audio("zombieGroan")
-        slamTentacles()
-
-    #universal specific atmospheric animations
-    def atmosphere(animation: str, state: str) -> none:
-        arduino.update("atmosphere", self.name, animation, state)
-    #story points
-    def practiceIntro() -> none:
-        audio("storyPracticeRun")
-
-    def gameIntro() -> none:
-        audio("gameRun")
-        audio("beware")
-
-    def zombiesRiseFromTheDead() -> none:
-        audio("storyZombieRise")
-        audio("zombieGroan")
-        arduino.update("zombies", self.name, "zombieFigures", "up")
-        arduino.update("skyAnimation", self.name, "redLight", "flash")
-
-    def krakenRisesFromTheDepths() -> none:
-        tentacleChangeColour("purple")
-        wiggleTentacles()
-        audio("krakenRoar")
-        audio("thundercrash")
-        arduino.update("skyAnimation", self.name, "lightning", "rolling")
-        audio("storyKrakenRise")
-
-    def krakenisDefeated() -> none:
-        wiggleTentacles()
-        audio("krakenRoar")
-        audio("krakenInjured")
-        liftTentacles()
-        audio("storyKrakenDefeat")
-
-    def theKrakenReturns() -> none:
-        tentacleChangeColour("green")
-        wiggleTentacles()
-        audio("krakenRoar")
-        audio("storyKrakenReturns")
-
-    def lightningCrash() -> none:
-        audio("thundercrash")
-        arduino.update("skyAnimation", self.name, "lightning", "crash")
-
-    def rollingLighning() -> none:
-        audio("thunderrumble")
-        arduino.update("skyAnimation", self.name, "lightning", "rolling")
+def storyAnimation(story_point: str) -> none:
+    match story_point:
+        case "start":
+            print("start\n")
+        case "zombiesRise":
+            print("zombiesRise\n")
+        case "krakenAppears":
+            print("zombiesRise\n")
+        case "krakenRises":
+            print("zombiesRise\n")
+        case "krakenDies":
+            print("krakenDies\n")
+        case "zombieKrakenRises":
+            print("zombieKrakenRises\n")
+        case"zombieKrakenDies":
+            print("zombieKrakenDies\n")
+        case "finish":
+            print("finish\n")
 
 
+story_points = {
+    20: "zombiesRise",
+    30: "krakenAppears",
+    110: "krakenRises",
+    120: "krakenDies",
+    160: "zombieKrakenRises",
+    230: "zombieKrakenDies"
+}
 
+real_game_loop = {
+    0: {
+        "archipelago": "normal",
+        "deepSeas": "normal",
+        "navy": "normal",
+        "volcano": "normal",
+        "roughSeas": "normal"
+    },
+    10: {
+        "archipelago": "goldenHour",
+        "deepSeas": "normal",
+        "navy": "normal",
+        "volcano": "normal",
+        "roughSeas": "normal"
+    },
+    20: {
+        "archipelago": "goldenHour",
+        "deepSeas": "zombie",
+        "navy": "normal",
+        "volcano": "normal",
+        "roughSeas": "normal"
+    },
+    30: {
+        "archipelago": "normal",
+        "deepSeas": "normal",
+        "navy": "zombie",
+        "volcano": "kraken",
+        "roughSeas": "normal"
+    },
+    40: {
+        "archipelago": "normal",
+        "deepSeas": "normal",
+        "navy": "normal",
+        "volcano": "kraken",
+        "roughSeas": "kraken"
+    },
+    50: {
+        "archipelago": "normal",
+        "deepSeas": "normal",
+        "navy": "normal",
+        "volcano": "normal",
+        "roughSeas": "normal"
+    },
+    60: {
+        "archipelago": "kraken",
+        "deepSeas": "goldenHour",
+        "navy": "normal",
+        "volcano": "normal",
+        "roughSeas": "normal"
+    },
+    70: {
+        "archipelago": "kraken",
+        "deepSeas": "normal",
+        "navy": "kraken",
+        "volcano": "goldenHour",
+        "roughSeas": "normal"
+    },
+    80: {
+        "archipelago": "kraken",
+        "deepSeas": "normal",
+        "navy": "kraken",
+        "volcano": "normal",
+        "roughSeas": "goldenHour"
+    },
+    90: {
+        "archipelago": "kraken",
+        "deepSeas": "normal",
+        "navy": "kraken",
+        "volcano": "normal",
+        "roughSeas": "goldenZombie"
+    },
+    110: {
+        "archipelago": "kraken",
+        "deepSeas": "goldenKraken",
+        "navy": "kraken",
+        "volcano": "kraken",
+        "roughSeas": "kraken"
+    },
+    120: {
+        "archipelago": "normal",
+        "deepSeas": "normal",
+        "navy": "normal",
+        "volcano": "normal",
+        "roughSeas": "normal"
+    },
+    130: {
+        "archipelago": "zombiePirates",
+        "deepSeas": "zombiePirates",
+        "navy": "normal",
+        "volcano": "normal",
+        "roughSeas": "normal"
+    },
+    140: {
+        "archipelago": "normal",
+        "deepSeas": "normal",
+        "navy": "zombiePirates",
+        "volcano": "normal",
+        "roughSeas": "zombiePirates"
+    },
+    150: {
+        "archipelago": "normal",
+        "deepSeas": "normal",
+        "navy": "goldenHour",
+        "volcano": "zombiePirates",
+        "roughSeas": "normal"
+    },
+    160: {
+        "archipelago": "zombieKraken",
+        "deepSeas": "zombieKraken",
+        "navy": "zombieKraken",
+        "volcano": "zombieKraken",
+        "roughSeas": "zombieKraken"
+    },
+    170: {
+        "archipelago": "normal",
+        "deepSeas": "normal",
+        "navy": "zombieKraken",
+        "volcano": "normal",
+        "roughSeas": "normal"
+    },
+    180: {
+        "archipelago": "normal",
+        "deepSeas": "normal",
+        "navy": "zombieKraken",
+        "volcano": "goldenHour",
+        "roughSeas": "normal"
+    },
+    190: {
+        "archipelago": "zombiePirates",
+        "deepSeas": "normal",
+        "navy": "normal",
+        "volcano": "zombieKraken",
+        "roughSeas": "normal"
+    },
+    200: {
+        "archipelago": "zombieKraken",
+        "deepSeas": "goldenHour",
+        "navy": "normal",
+        "volcano": "normal",
+        "roughSeas": "normal"
+    },
+    210: {
+        "archipelago": "normal",
+        "deepSeas": "zombieKraken",
+        "navy": "normal",
+        "volcano": "normal",
+        "roughSeas": "normal"
+    },
+    220: {
+        "archipelago": "goldenZombieKraken",
+        "deepSeas": "normal",
+        "navy": "zombieKraken",
+        "volcano": "normal",
+        "roughSeas": "normal"
+    },
+    230: {
+        "archipelago": "goldenZombieKraken",
+        "deepSeas": "normal",
+        "navy": "zombieKraken",
+        "volcano": "zombieKraken",
+        "roughSeas": "normal"
+    },
+    240: {
+        "archipelago": "normal",
+        "deepSeas": "normal",
+        "navy": "goldenHour",
+        "volcano": "normal",
+        "roughSeas": "normal"
+    }
+}
 
+practice_game_loop = {
+    0: {
+        "archipelago": "normal",
+        "deepSeas": "normal",
+        "navy": "normal",
+        "volcano": "normal",
+        "roughSeas": "normal"
+    },
+    10: {
+        "archipelago": "normal",
+        "deepSeas": "normal",
+        "navy": "normal",
+        "volcano": "goldenHour",
+        "roughSeas": "normal"
+    },
+    20: {
+        "archipelago": "normal",
+        "deepSeas": "normal",
+        "navy": "normal",
+        "volcano": "zombiePirates",
+        "roughSeas": "normal"
+    },
+    30: {
+        "archipelago": "normal",
+        "deepSeas": "normal",
+        "navy": "zombiePirates",
+        "volcano": "kraken",
+        "roughSeas": "normal"
+    },
+    40: {
+        "archipelago": "normal",
+        "deepSeas": "normal",
+        "navy": "normal",
+        "volcano": "kraken",
+        "roughSeas": "kraken"
+    },
+    50: {
+        "archipelago": "normal",
+        "deepSeas": "normal",
+        "navy": "normal",
+        "volcano": "normal",
+        "roughSeas": "normal"
+    },
+    60: {
+        "archipelago": "kraken",
+        "deepSeas": "goldenHour",
+        "navy": "normal",
+        "volcano": "normal",
+        "roughSeas": "normal"
+    },
+    70: {
+        "archipelago": "kraken",
+        "deepSeas": "normal",
+        "navy": "kraken",
+        "volcano": "goldenHour",
+        "roughSeas": "normal"
+    },
+    80: {
+        "archipelago": "kraken",
+        "deepSeas": "normal",
+        "navy": "kraken",
+        "volcano": "normal",
+        "roughSeas": "goldenHour"
+    },
+    90: {
+        "archipelago": "kraken",
+        "deepSeas": "normal",
+        "navy": "goldenZombie",
+        "volcano": "normal",
+        "roughSeas": "normal"
+    },
+    110: {
+        "archipelago": "normal",
+        "deepSeas": "normal",
+        "navy": "kraken",
+        "volcano": "normal",
+        "roughSeas": "goldenKraken"
+    },
+    120: {
+        "archipelago": "kraken",
+        "deepSeas": "normal",
+        "navy": "normal",
+        "volcano": "normal",
+        "roughSeas": "normal"
+    },
+    130: {
+        "archipelago": "zombiePirates",
+        "deepSeas": "zombiePirates",
+        "navy": "normal",
+        "volcano": "normal",
+        "roughSeas": "normal"
+    },
+    140: {
+        "archipelago": "normal",
+        "deepSeas": "normal",
+        "navy": "zombiePirates",
+        "volcano": "normal",
+        "roughSeas": "zombiePirates"
+    },
+    150: {
+        "archipelago": "zombiePirates",
+        "deepSeas": "normal",
+        "navy": "goldenHour",
+        "volcano": "zombiePirates",
+        "roughSeas": "normal"
+    },
+    160: {
+        "archipelago": "normal",
+        "deepSeas": "normal",
+        "navy": "normal",
+        "volcano": "normal",
+        "roughSeas": "normal"
+    },
+    170: {
+        "archipelago": "normal",
+        "deepSeas": "normal",
+        "navy": "kraken",
+        "volcano": "normal",
+        "roughSeas": "normal"
+    },
+    180: {
+        "archipelago": "normal",
+        "deepSeas": "kraken",
+        "navy": "kraken",
+        "volcano": "normal",
+        "roughSeas": "normal"
+    },
+    190: {
+        "archipelago": "normal",
+        "deepSeas": "kraken",
+        "navy": "normal",
+        "volcano": "normal",
+        "roughSeas": "zombiePirates"
+    },
+    200: {
+        "archipelago": "normal",
+        "deepSeas": "zombiePirates",
+        "navy": "normal",
+        "volcano": "normal",
+        "roughSeas": "goldenHour"
+    },
+    210: {
+        "archipelago": "normal",
+        "deepSeas": "normal",
+        "navy": "normal",
+        "volcano": "normal",
+        "roughSeas": "normal"
+    },
+    220: {
+        "archipelago": "zombieKraken",
+        "deepSeas": "normal",
+        "navy": "normal",
+        "volcano": "normal",
+        "roughSeas": "normal"
+    },
+    230: {
+        "archipelago": "zombieKraken",
+        "deepSeas": "normal",
+        "navy": "normal",
+        "volcano": "normal",
+        "roughSeas": "normal"
+    },
+    240: {
+        "archipelago": "normal",
+        "deepSeas": "normal",
+        "navy": "normal",
+        "volcano": "normal",
+        "roughSeas": "normal"
+    }
+}
 
+test_game_loop = {
+    0: {
+        "archipelago": "normal",
+        "deepSeas": "normal",
+        "navy": "normal",
+        "volcano": "normal",
+        "roughSeas": "normal"
+    },
+    10: {
+        "archipelago": "normal",
+        "deepSeas": "normal",
+        "navy": "normal",
+        "volcano": "goldenHour",
+        "roughSeas": "normal"
+    },
+    20: {
+        "archipelago": "normal",
+        "deepSeas": "normal",
+        "navy": "normal",
+        "volcano": "zombiePirates",
+        "roughSeas": "normal"
+    },
+    30: {
+        "archipelago": "normal",
+        "deepSeas": "normal",
+        "navy": "zombiePirates",
+        "volcano": "kraken",
+        "roughSeas": "normal"
+    }
+}
+
+zones = [zone(name) for name in ["archipelago", "deepSeas", "navy", "volcano", "roughSeas"]
+
+startTime = time.time()
+timer = time.time() - startTime
+finishtime = 250
+timeGap = 10
+warningTime = 5
+blinkSpeed = 100
+loopDelay = 10
+gameLoop = test_game_loop
+mode = input("select runMode(P/S/T/R)")
+if mode = "T":
+    gameLoop = test_game_loop
+    finishtime = 40
+elif mode = "P":
+    gameLoop = practice_game_loop
+elif mode = "S":
+    gameLoop = real_game_loop
+storyAnimation("start")
+while timer < finishtime:
+    if mode = "S":
+        for timepoint in story_points.keys():
+            if timer > timepoint:
+                storyAnimation(story_points[timepoint])
+    for timepoint in gameloop.keys():
+        if timer > timepoint + timeGap:
+            gameloop.pop(timepoint)
+        elif timer > timePoint + warningTime:
+            for gameZone in gameLoop[timepoint].keys():
+                for zone in zones:
+                    if zone.name == gameZone:
+                        if gameLoop[timepoint][gameZone] != zone.currentState:
+                            zone.currentState = gameLoop[timepoint][gameZone]
+                            zone.changeBoard()
+                            zone.changeMap(gameLoop[timepoint][gameZone])
+        elif timer > timePoint and timer < timePoint + warningTime:
+            for gameZone in gameLoop[timepoint].keys():
+                for zone in zones:
+                    if zone.name == gameZone:
+                        if timer > previousBlinkTime + blinkSpeed:
+                            if gameLoop[timepoint][gameZone] == zone.currentState:
+                                zone.currentState = "normal"
+                            else:
+                                zone.currentState = gameLoop[timepoint][gameZone]
+            previousBlinkTime = timer
+
+    time.sleep(loopDelay)
+    timer = time.time() - startTime
+    print(str(timer) + "\n")
+storyAnimation("finish")
 #2 modes, testing mode, and play mode(big reveal, lights, sounds colours, audio, music, voic prompts)
 #5 seconds ish of warning before zone change
 #iniatialise all zone and game state:

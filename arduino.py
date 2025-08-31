@@ -1,21 +1,10 @@
 import sys, serial
+from sqlalchemy import case, false, true
 
-arduinos: dict[arduino] = {"map": none, "kraken": none, "skyAnimation": none, "atmosphere": none, "zombies": none, "roughSeas": none, "volcanoe": none, "navy": none}
+from main import zone
 
-def update(name: str, zone: str, object: str, command: str) -> none:
-    arduinos[name].write(zone, object, command)
-
-def setup() -> none:
-    for device in arduinos:
-        arduinos[device] = arduino(device)
-
-class NoValidPortError(Exception):
-    """Exception raised when no valid Arduino ports are found."""
-    pass
-
-class arduino:
-    def __init__(name: str, port: str = "", baudRate: int = 9600) -> none:
-        self.name = name
+class Arduino:
+    def __init__(self, port: str = "", baudRate: int = 9600) -> none:
         self.baudRate = baudRate
         if port != "":
             self.port = port
@@ -23,8 +12,26 @@ class arduino:
             self.port = self.selectPort()
         self.coms = serial.Serial(self.port, baudrate=self.baudRate, timeout=.1)
 
-    def write(zone: str, object: str, command: str) -> none:
-        message = "[" + zone + "|" + object "|" + command + "]"
+    def write(tent_light_letter: str, zone_name: str, object_letter, enable: bool) -> none:
+
+        match zone_name:
+            case "archipelago":
+                zone_letter = "A"
+            case "deepSeas":
+                zone_letter = "D"
+            case "roughSeas":
+                zone_letter = "W"
+            case "volcanoe":
+                zone_letter = "V"
+            case "navy":
+                zone_letter = "N"
+
+        if enable:
+            enable_letter = "e"
+        else:
+            enable_letter = "d"
+
+        message = tent_light_letter + zone_letter + object_letter + enable_letter
         self.coms.write(message.encode('utf-8'))
         self.coms.write(bytes('\n', encoding='utf-8'))
 
@@ -49,3 +56,64 @@ class arduino:
         selectedPort = sorted(validPorts)[choice]
         print(f"selecting: {selectedPort.device}")
         return selectedPort.device
+
+# arduinos: dict[arduino] = {"map": none, "kraken": none, "skyAnimation": none, "atmosphere": none, "zombies": none, "roughSeas": none, "volcanoe": none, "navy": none}
+main_arduino = Arduino("COM6", 9600)
+
+def update_lights(zone_name: str, state: str) -> none:
+    match state:
+        case "normal":
+            main_arduino.write("l", zone_name, "k", false)
+            main_arduino.write("l", zone_name, "t", false)
+            main_arduino.write("l", zone_name, "z", false)
+        case "goldenHour":
+            main_arduino.write("l", zone_name, "k", false)
+            main_arduino.write("l", zone_name, "t", true)
+            main_arduino.write("l", zone_name, "z", false)
+        case "zombiePirates":
+            main_arduino.write("l", zone_name, "k", false)
+            main_arduino.write("l", zone_name, "t", false)
+            main_arduino.write("l", zone_name, "z", true)
+        case "kraken":
+            main_arduino.write("l", zone_name, "k", true)
+            main_arduino.write("l", zone_name, "t", false)
+            main_arduino.write("l", zone_name, "z", false)
+        case "zombieKraken":
+            main_arduino.write("l", zone_name, "k", true)
+            main_arduino.write("l", zone_name, "t", false)
+            main_arduino.write("l", zone_name, "z", true)
+        case "goldenZombie":
+            main_arduino.write("l", zone_name, "k", false)
+            main_arduino.write("l", zone_name, "t", true)
+            main_arduino.write("l", zone_name, "z", true)
+        case "goldenKraken":
+            main_arduino.write("l", zone_name, "k", true)
+            main_arduino.write("l", zone_name, "t", true)
+            main_arduino.write("l", zone_name, "z", false)
+        case "goldenZombieKraken":
+            main_arduino.write("l", zone_name, "k", true)
+            main_arduino.write("l", zone_name, "t", true)
+            main_arduino.write("l", zone_name, "z", true)
+
+def update_tentacles(zone_name: str, state: str) -> none:
+    match state:
+        case "normal":
+            main_arduino.write("t", zone_name, "0", false)
+        case "goldenHour":
+            main_arduino.write("t", zone_name, "0", false)
+        case "zombiePirates":
+            main_arduino.write("t", zone_name, "0", false)
+        case "kraken":
+            main_arduino.write("t", zone_name, "0", true)
+        case "zombieKraken":
+            main_arduino.write("t", zone_name, "0", true)
+        case "goldenZombie":
+            main_arduino.write("t", zone_name, "0", false)
+        case "goldenKraken":
+            main_arduino.write("t", zone_name, "0", true)
+        case "goldenZombieKraken":
+            main_arduino.write("t", zone_name, "0", true)
+
+class NoValidPortError(Exception):
+    """Exception raised when no valid Arduino ports are found."""
+    pass

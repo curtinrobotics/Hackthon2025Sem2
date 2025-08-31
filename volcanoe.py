@@ -10,16 +10,17 @@ class volcanoe(zone):
         super().audio(filename)
 
     def animation(ani: str) -> none:
-        case "lavaFlow":
-            lavaFlow()
-        case "smokeOn":
-            smoke("On"):
-        case "smokeOff":
-            smoke("Off"):
-        case "erruption":
-            erruption()
-        case _:
-            super().animation(ani)
+        match ani:
+            case "lavaFlow":
+                lavaFlow()
+            case "smokeOn":
+                smoke("On"):
+            case "smokeOff":
+                smoke("Off"):
+            case "erruption":
+                erruption()
+            case _:
+                super().animation(ani)
 
     def erruption(delay: int = 10000) -> none:
         audio("erruption")
