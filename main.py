@@ -3,8 +3,7 @@ import arduino
 import random
 import time
 import math
-
-arduino_port = "COM15"
+import threading
 
 class zone:
     def __init__(self, name: str, currentState: str = "normal") -> None:
@@ -84,34 +83,44 @@ class zone:
         arduino.update_tentacles(self.name, self.currentState)
 
     #generic animations and actions
-    def changeMap(self, state: str) -> None:
-        self.currentState = state
-        arduino.update_lights(self.name, self.currentState)
+    def changeMap(self, newState) -> None:
+        arduino.update_lights(self.name, newState)
+
+    def warningMap(self, state: str) -> None:
+        arduino.blink_lights(self.name, state)
 
 def storyAnimation(story_point: str) -> None:
     match story_point:
         case "start":
             print("start\n")
+            #playsound("start.mp3")
         case "zombiesRise":
             print("zombiesRise\n")
+            playsound("zombiesRise.mp3")
         case "krakenAppears":
-            print("zombiesRise\n")
+            print("krakenAppears\n")
+            #playsound("krakenAppears.mp3")
         case "krakenRises":
-            print("zombiesRise\n")
+            print("krakenRises\n")
+            playsound("krakenRises.mp3")
         case "krakenDies":
             print("krakenDies\n")
+            playsound("krakenDies.mp3")
         case "zombieKrakenRises":
             print("zombieKrakenRises\n")
+            playsound("zombieKrakenRises.mp3")
         case"zombieKrakenDies":
             print("zombieKrakenDies\n")
+            playsound("zombieKrakenDies.mp3")
         case "finish":
-            print("finish\n")
+            print("finish.mp3")
+            #playsound("finish\n")
 
 
 story_points = {
     20: "zombiesRise",
     30: "krakenAppears",
-    110: "krakenRises",
+    90: "krakenRises",
     120: "krakenDies",
     160: "zombieKrakenRises",
     230: "zombieKrakenDies"
@@ -134,7 +143,7 @@ real_game_loop = {
     },
     20: {
         "archipelago": "goldenHour",
-        "deepSeas": "zombie",
+        "deepSeas": "zombiePirates",
         "navy": "normal",
         "volcano": "normal",
         "roughSeas": "normal"
@@ -142,7 +151,7 @@ real_game_loop = {
     30: {
         "archipelago": "normal",
         "deepSeas": "normal",
-        "navy": "zombie",
+        "navy": "zombiePirates",
         "volcano": "kraken",
         "roughSeas": "normal"
     },
@@ -183,17 +192,24 @@ real_game_loop = {
     },
     90: {
         "archipelago": "kraken",
-        "deepSeas": "normal",
+        "deepSeas": "kraken",
         "navy": "kraken",
-        "volcano": "normal",
-        "roughSeas": "goldenZombie"
+        "volcano": "kraken",
+        "roughSeas": "zombieKraken"
+    },
+    100: {
+        "archipelago": "kraken",
+        "deepSeas": "kraken",
+        "navy": "kraken",
+        "volcano": "kraken",
+        "roughSeas": "goldenZombieKraken"
     },
     110: {
         "archipelago": "kraken",
         "deepSeas": "goldenKraken",
         "navy": "kraken",
         "volcano": "kraken",
-        "roughSeas": "kraken"
+        "roughSeas": "goldenKraken"
     },
     120: {
         "archipelago": "normal",
@@ -499,9 +515,7 @@ test_game_loop = {
 
 zones = [zone(name) for name in ["archipelago", "deepSeas", "navy", "volcano", "roughSeas"]]
 
-startTime = time.time()
-timer = time.time() - startTime
-previousBlinkTime = timer
+
 finishtime = 250 #seconds
 timeGap = 10 #time between timePoints in seconds
 warningTime = 5 #seconds
@@ -514,25 +528,44 @@ print("T - test game loop")
 print("P - practice game loop")
 print("S - real game loop")
 print("R - random")
-mode = input("select run mode: ")
+mode = input("select run mode: ").upper()
 
 match mode:
     case "T":
+        print("Selectd mode Test")
         gameLoop = test_game_loop
         finishtime = 40
     case "P":
+        print("Selected mode Practice")
         gameLoop = practice_game_loop
     case "S":
         gameLoop = real_game_loop
+        print("Selected mode Story")
+    case _:
+        print("Invalid mode selected")
+        exit()
 
+class TimerHelper:
+    def __init__(self):
+        self.startTime = time.time()
+        self.times = []
+    def addTime(self, name):
+        self.times.append((name, time.time()))
+    def __str__(self):
+        outString = ""
+        prevTime = self.startTime
+        prevName = "start"
+        for curName, curTime in self.times:
+            outString += f" | {prevName}: {(curTime-prevTime):.4f}"
+            prevTime = curTime
+            prevName = curName
+        return outString
 
+startTime = time.time()
+timer = 0
 storyAnimation("start")
 while timer < finishtime:
-    if mode == "S":
-        for timePoint in story_points.keys():
-            if timer > timePoint:
-                storyAnimation(story_points[timePoint])
-
+    loopTimer = TimerHelper()
     for timePoint in gameLoop.keys():
         if timer > timePoint + warningTime:
             for gameZone in gameLoop[timePoint].keys():
@@ -541,27 +574,31 @@ while timer < finishtime:
                         if gameLoop[timePoint][gameZone] != zone.currentState:
                             zone.currentState = gameLoop[timePoint][gameZone]
                             zone.changeBoard()
-                            zone.changeMap(gameLoop[timePoint][gameZone])
+                            zone.changeMap(zone.currentState)
         elif timer > timePoint and timer < timePoint + warningTime:
             for gameZone in gameLoop[timePoint].keys():
                 for zone in zones:
                     if zone.name == gameZone:
-                        if timer > previousBlinkTime + blinkSpeed:
-                            if gameLoop[timePoint][gameZone] == zone.currentState:
-                                zone.currentState = "normal"
-                            else:
-                                zone.currentState = gameLoop[timePoint][gameZone]
-            previousBlinkTime = timer
+                        if gameLoop[timePoint][gameZone] != zone.currentState:
+                            zone.warningMap(gameLoop[timePoint][gameZone])
 
-    for timePoint in range(math.floor(timer)-timeGap,0,-1):
+    loopTimer.addTime(f"removal{math.floor(timer)-timeGap+1}")
+    for timePoint in range(0, math.floor(timer)-timeGap+1):
         if timePoint in gameLoop:
             gameLoop.pop(timePoint)
-        if mode == "S" and timePoint in story_points:
-            story_points.pop(timePoint)
-
+    if mode == "S":
+        for timePoint in story_points.keys():
+            if timer > timePoint:
+                #storyAnimation(story_points[timePoint])
+                animation = threading.Thread(target=storyAnimation, args=(story_points[timePoint],))
+                animation.start()
+        for timePoint in range(0, math.floor(timer)+1):
+            if timePoint in story_points:
+                story_points.pop(timePoint)
+    loopTimer.addTime("end")
     time.sleep(loopDelay)
+    print(f"{timer:.2f}{loopTimer}\n")
     timer = time.time() - startTime
-    print(str(timer) + "\n")
 storyAnimation("finish")
 #2 modes, testing mode, and play mode(big reveal, lights, sounds colours, audio, music, voic prompts)
 #5 seconds ish of warning before zone change

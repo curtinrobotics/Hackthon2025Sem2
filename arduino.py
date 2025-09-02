@@ -1,4 +1,6 @@
 import sys, serial
+import time
+import threading
 #from sqlalchemy import case, False, True
 
 class Arduino:
@@ -10,9 +12,9 @@ class Arduino:
             self.port = self.selectPort()
         self.coms = serial.Serial(self.port, baudrate=self.baudRate, timeout=.1)
 
-    def write(self, tent_light_letter: str, zone_name: str, object_letter, enable: bool) -> None:
-        zone_letter = "A"
-        enable_letter = "d"
+    def write(self, tent_light_letter: str, zone_name: str, object_letter, enable: str) -> None:
+        zone_letter = "_"
+        enable_letter = "_"
         match zone_name:
             case "archipelago":
                 zone_letter = "A"
@@ -20,21 +22,19 @@ class Arduino:
                 zone_letter = "D"
             case "roughSeas":
                 zone_letter = "W"
-            case "volcanoe":
+            case "volcano":
                 zone_letter = "V"
             case "navy":
                 zone_letter = "N"
 
-        if enable:
-            enable_letter = "e"
-        else:
-            enable_letter = "d"
-
         message = tent_light_letter + zone_letter + object_letter + enable_letter
-        print("Sending to arduino: " + message)
+        print(f"Sending to arduino:|{message}|", end="")
 
         self.coms.write(message.encode('utf-8'))
-        self.coms.write(bytes('\n', encoding='utf-8'))
+        print("...", end="")
+        time.sleep(0.01)
+        #self.coms.write(bytes('\n', encoding='utf-8'))
+        print("Done")
 
 
     def selectPort() -> None:
@@ -60,64 +60,167 @@ class Arduino:
 
 # arduinos: dict[arduino] = {"map": None, "kraken": None, "skyAnimation": None, "atmosphere": None, "zombies": None, "roughSeas": None, "volcanoe": None, "navy": None}
 
-arduino_port = "COM15"
+arduino_port = "COM6"
 print("Using port " + arduino_port)
 print("Assigned on line 63 in arduino.py")
 main_arduino = Arduino(arduino_port, 9600)
 
-def update_lights(zone_name: str, state: str) -> None:
+def blink_lights(zone_name: str, state: str) -> None:
+    threads = []
     match state:
         case "normal":
-            main_arduino.write("l", zone_name, "k", False)
-            main_arduino.write("l", zone_name, "t", False)
-            main_arduino.write("l", zone_name, "z", False)
-        case "goldenHour":
-            main_arduino.write("l", zone_name, "k", False)
-            main_arduino.write("l", zone_name, "t", True)
-            main_arduino.write("l", zone_name, "z", False)
-        case "zombiePirates":
-            main_arduino.write("l", zone_name, "k", False)
-            main_arduino.write("l", zone_name, "t", False)
-            main_arduino.write("l", zone_name, "z", True)
+            threads.append(threading.Thread(target=main_arduino.write, args=("l", zone_name, "k", "d",)))
+            threads.append(threading.Thread(target=main_arduino.write, args=("l", zone_name, "t", "d",)))
+            threads.append(threading.Thread(target=main_arduino.write, args=("l", zone_name, "z", "d",)))
+            #main_arduino.write("l", zone_name, "k", "d")
+            #main_arduino.write("l", zone_name, "t", "d")
+            #main_arduino.write("l", zone_name, "z", "d")
+        case "goldenhour":
+            threads.append(threading.Thread(target=main_arduino.write, args=("l", zone_name, "k", "d",)))
+            threads.append(threading.Thread(target=main_arduino.write, args=("l", zone_name, "t", "b",)))
+            threads.append(threading.Thread(target=main_arduino.write, args=("l", zone_name, "z", "d",)))
+            #main_arduino.write("l", zone_name, "k", "d")
+            #main_arduino.write("l", zone_name, "t", "b")
+            #main_arduino.write("l", zone_name, "z", "d")
+        case "zombiepirates":
+            threads.append(threading.Thread(target=main_arduino.write, args=("l", zone_name, "k", "d",)))
+            threads.append(threading.Thread(target=main_arduino.write, args=("l", zone_name, "t", "d",)))
+            threads.append(threading.Thread(target=main_arduino.write, args=("l", zone_name, "z", "b",)))
+            #main_arduino.write("l", zone_name, "k", "d")
+            #main_arduino.write("l", zone_name, "t", "d")
+            #main_arduino.write("l", zone_name, "z", "b")
         case "kraken":
-            main_arduino.write("l", zone_name, "k", True)
-            main_arduino.write("l", zone_name, "t", False)
-            main_arduino.write("l", zone_name, "z", False)
-        case "zombieKraken":
-            main_arduino.write("l", zone_name, "k", True)
-            main_arduino.write("l", zone_name, "t", False)
-            main_arduino.write("l", zone_name, "z", True)
-        case "goldenZombie":
-            main_arduino.write("l", zone_name, "k", False)
-            main_arduino.write("l", zone_name, "t", True)
-            main_arduino.write("l", zone_name, "z", True)
-        case "goldenKraken":
-            main_arduino.write("l", zone_name, "k", True)
-            main_arduino.write("l", zone_name, "t", True)
-            main_arduino.write("l", zone_name, "z", False)
-        case "goldenZombieKraken":
-            main_arduino.write("l", zone_name, "k", True)
-            main_arduino.write("l", zone_name, "t", True)
-            main_arduino.write("l", zone_name, "z", True)
+            threads.append(threading.Thread(target=main_arduino.write, args=("l", zone_name, "k", "b",)))
+            threads.append(threading.Thread(target=main_arduino.write, args=("l", zone_name, "t", "d",)))
+            threads.append(threading.Thread(target=main_arduino.write, args=("l", zone_name, "z", "d",)))
+            #main_arduino.write("l", zone_name, "k", "b")
+            #main_arduino.write("l", zone_name, "t", "d")
+            #main_arduino.write("l", zone_name, "z", "d")
+        case "zombiekraken":
+            threads.append(threading.Thread(target=main_arduino.write, args=("l", zone_name, "k", "b",)))
+            threads.append(threading.Thread(target=main_arduino.write, args=("l", zone_name, "t", "d",)))
+            threads.append(threading.Thread(target=main_arduino.write, args=("l", zone_name, "z", "b",)))
+            #main_arduino.write("l", zone_name, "k", "b")
+            #main_arduino.write("l", zone_name, "t", "d")
+            #main_arduino.write("l", zone_name, "z", "b")
+        case "goldenzombie":
+            threads.append(threading.Thread(target=main_arduino.write, args=("l", zone_name, "k", "d",)))
+            threads.append(threading.Thread(target=main_arduino.write, args=("l", zone_name, "t", "b",)))
+            threads.append(threading.Thread(target=main_arduino.write, args=("l", zone_name, "z", "b",)))
+            #main_arduino.write("l", zone_name, "k", "d")
+            #main_arduino.write("l", zone_name, "t", "b")
+            #main_arduino.write("l", zone_name, "z", "b")
+        case "goldenkraken":
+            threads.append(threading.Thread(target=main_arduino.write, args=("l", zone_name, "k", "b",)))
+            threads.append(threading.Thread(target=main_arduino.write, args=("l", zone_name, "t", "b",)))
+            threads.append(threading.Thread(target=main_arduino.write, args=("l", zone_name, "z", "d",)))
+            #main_arduino.write("l", zone_name, "k", "b")
+            #main_arduino.write("l", zone_name, "t", "b")
+            #main_arduino.write("l", zone_name, "z", "d")
+        case "goldenzombiekraken":
+            threads.append(threading.Thread(target=main_arduino.write, args=("l", zone_name, "k", "b",)))
+            threads.append(threading.Thread(target=main_arduino.write, args=("l", zone_name, "t", "b",)))
+            threads.append(threading.Thread(target=main_arduino.write, args=("l", zone_name, "z", "b",)))
+            #main_arduino.write("l", zone_name, "k", "b")
+            #main_arduino.write("l", zone_name, "t", "b")
+            #main_arduino.write("l", zone_name, "z", "b")
+    for thread in threads:
+        thread.start()
+        time.sleep(0.01)
+
+def update_lights(zone_name: str, state: str) -> None:
+    state = state.lower()
+    threads = []
+    match state:
+        case "normal":
+            threads.append(threading.Thread(target=main_arduino.write, args=("l", zone_name, "k", "d",)))
+            threads.append(threading.Thread(target=main_arduino.write, args=("l", zone_name, "t", "d",)))
+            threads.append(threading.Thread(target=main_arduino.write, args=("l", zone_name, "z", "d",)))
+            #main_arduino.write("l", zone_name, "k", "d")
+            #main_arduino.write("l", zone_name, "t", "d")
+            #main_arduino.write("l", zone_name, "z", "d")
+        case "goldenhour":
+            threads.append(threading.Thread(target=main_arduino.write, args=("l", zone_name, "k", "d",)))
+            threads.append(threading.Thread(target=main_arduino.write, args=("l", zone_name, "t", "e",)))
+            threads.append(threading.Thread(target=main_arduino.write, args=("l", zone_name, "z", "d",)))
+            #main_arduino.write("l", zone_name, "k", "d")
+            #main_arduino.write("l", zone_name, "t", "e")
+            #main_arduino.write("l", zone_name, "z", "d")
+        case "zombiepirates":
+            threads.append(threading.Thread(target=main_arduino.write, args=("l", zone_name, "k", "d",)))
+            threads.append(threading.Thread(target=main_arduino.write, args=("l", zone_name, "t", "d",)))
+            threads.append(threading.Thread(target=main_arduino.write, args=("l", zone_name, "z", "e",)))
+            #main_arduino.write("l", zone_name, "k", "d")
+            #main_arduino.write("l", zone_name, "t", "d")
+            #main_arduino.write("l", zone_name, "z", "e")
+        case "kraken":
+            threads.append(threading.Thread(target=main_arduino.write, args=("l", zone_name, "k", "e",)))
+            threads.append(threading.Thread(target=main_arduino.write, args=("l", zone_name, "t", "d",)))
+            threads.append(threading.Thread(target=main_arduino.write, args=("l", zone_name, "z", "d",)))
+            #main_arduino.write("l", zone_name, "k", "e")
+            #main_arduino.write("l", zone_name, "t", "d")
+            #main_arduino.write("l", zone_name, "z", "d")
+        case "zombiekraken":
+            threads.append(threading.Thread(target=main_arduino.write, args=("l", zone_name, "k", "e",)))
+            threads.append(threading.Thread(target=main_arduino.write, args=("l", zone_name, "t", "d",)))
+            threads.append(threading.Thread(target=main_arduino.write, args=("l", zone_name, "z", "e",)))
+            #main_arduino.write("l", zone_name, "k", "e")
+            #main_arduino.write("l", zone_name, "t", "d")
+            #main_arduino.write("l", zone_name, "z", "e")
+        case "goldenzombie":
+            threads.append(threading.Thread(target=main_arduino.write, args=("l", zone_name, "k", "d",)))
+            threads.append(threading.Thread(target=main_arduino.write, args=("l", zone_name, "t", "e",)))
+            threads.append(threading.Thread(target=main_arduino.write, args=("l", zone_name, "z", "e",)))
+            #main_arduino.write("l", zone_name, "k", "d")
+            #main_arduino.write("l", zone_name, "t", "e")
+            #main_arduino.write("l", zone_name, "z", "e")
+        case "goldenkraken":
+            threads.append(threading.Thread(target=main_arduino.write, args=("l", zone_name, "k", "e",)))
+            threads.append(threading.Thread(target=main_arduino.write, args=("l", zone_name, "t", "e",)))
+            threads.append(threading.Thread(target=main_arduino.write, args=("l", zone_name, "z", "d",)))
+            #main_arduino.write("l", zone_name, "k", "e")
+            #main_arduino.write("l", zone_name, "t", "e")
+            #main_arduino.write("l", zone_name, "z", "d")
+        case "goldenzombiekraken":
+            threads.append(threading.Thread(target=main_arduino.write, args=("l", zone_name, "k", "e",)))
+            threads.append(threading.Thread(target=main_arduino.write, args=("l", zone_name, "t", "e",)))
+            threads.append(threading.Thread(target=main_arduino.write, args=("l", zone_name, "z", "e",)))
+            #main_arduino.write("l", zone_name, "k", "e")
+            #main_arduino.write("l", zone_name, "t", "e")
+            #main_arduino.write("l", zone_name, "z", "e")
+    for thread in threads:
+        thread.start()
+        time.sleep(0.01)
 
 def update_tentacles(zone_name: str, state: str) -> None:
+    state = state.lower()
     match state:
         case "normal":
-            main_arduino.write("t", zone_name, "0", False)
-        case "goldenHour":
-            main_arduino.write("t", zone_name, "0", False)
-        case "zombiePirates":
-            main_arduino.write("t", zone_name, "0", False)
+            thread = threading.Thread(target=main_arduino.write, args=("t", zone_name, "0", "d",))
+            #main_arduino.write("t", zone_name, "0", "d")
+        case "goldenhour":
+            thread = threading.Thread(target=main_arduino.write, args=("t", zone_name, "0", "d",))
+            #main_arduino.write("t", zone_name, "0", "d")
+        case "zombiepirates":
+            thread = threading.Thread(target=main_arduino.write, args=("t", zone_name, "0", "d",))
+            #main_arduino.write("t", zone_name, "0", "d")
         case "kraken":
-            main_arduino.write("t", zone_name, "0", True)
-        case "zombieKraken":
-            main_arduino.write("t", zone_name, "0", True)
-        case "goldenZombie":
-            main_arduino.write("t", zone_name, "0", False)
-        case "goldenKraken":
-            main_arduino.write("t", zone_name, "0", True)
-        case "goldenZombieKraken":
-            main_arduino.write("t", zone_name, "0", True)
+            thread = threading.Thread(target=main_arduino.write, args=("t", zone_name, "0", "e",))
+            #main_arduino.write("t", zone_name, "0", "e")
+        case "zombiekraken":
+            thread = threading.Thread(target=main_arduino.write, args=("t", zone_name, "0", "e",))
+            #main_arduino.write("t", zone_name, "0", "e")
+        case "goldenzombie":
+            thread = threading.Thread(target=main_arduino.write, args=("t", zone_name, "0", "d",))
+            #main_arduino.write("t", zone_name, "0", "d")
+        case "goldenkraken":
+            thread = threading.Thread(target=main_arduino.write, args=("t", zone_name, "0", "e",))
+            #main_arduino.write("t", zone_name, "0", "e")
+        case "goldenzombiekraken":
+            thread = threading.Thread(target=main_arduino.write, args=("t", zone_name, "0", "e",))
+            #main_arduino.write("t", zone_name, "0", "e")
+    thread.start()
+    time.sleep(0.01)
 
 class NoValidPortError(Exception):
     """Exception raised when no valid Arduino ports are found."""
