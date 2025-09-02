@@ -4,6 +4,8 @@ import random
 import time
 import math
 
+arduino_port = "COM15"
+
 class zone:
     def __init__(self, name: str, currentState: str = "normal") -> None:
         self.name: str = name
@@ -357,6 +359,13 @@ practice_game_loop = {
         "volcano": "normal",
         "roughSeas": "normal"
     },
+    100: {
+        "archipelago": "normal",
+        "deepSeas": "kraken",
+        "navy": "normal",
+        "volcano": "normal",
+        "roughSeas": "normal"
+    },
     110: {
         "archipelago": "normal",
         "deepSeas": "normal",
@@ -496,10 +505,17 @@ previousBlinkTime = timer
 finishtime = 250 #seconds
 timeGap = 10 #time between timePoints in seconds
 warningTime = 5 #seconds
-blinkSpeed = 0.1 #miliseconds
-loopDelay = 0.1 #seconds
+blinkSpeed = 0.5 #seconds
+loopDelay = 0.25 #seconds
 gameLoop = test_game_loop
-mode = input("select runMode(P/S/T/R)")
+
+print("Select run mode")
+print("T - test game loop")
+print("P - practice game loop")
+print("S - real game loop")
+print("R - random")
+mode = input("select run mode: ")
+
 match mode:
     case "T":
         gameLoop = test_game_loop
@@ -508,6 +524,8 @@ match mode:
         gameLoop = practice_game_loop
     case "S":
         gameLoop = real_game_loop
+
+
 storyAnimation("start")
 while timer < finishtime:
     if mode == "S":

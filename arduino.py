@@ -31,6 +31,8 @@ class Arduino:
             enable_letter = "d"
 
         message = tent_light_letter + zone_letter + object_letter + enable_letter
+        print("Sending to arduino: " + message)
+
         self.coms.write(message.encode('utf-8'))
         self.coms.write(bytes('\n', encoding='utf-8'))
 
@@ -58,7 +60,10 @@ class Arduino:
 
 # arduinos: dict[arduino] = {"map": None, "kraken": None, "skyAnimation": None, "atmosphere": None, "zombies": None, "roughSeas": None, "volcanoe": None, "navy": None}
 
-main_arduino = Arduino("COM16", 9600)
+arduino_port = "COM15"
+print("Using port " + arduino_port)
+print("Assigned on line 63 in arduino.py")
+main_arduino = Arduino(arduino_port, 9600)
 
 def update_lights(zone_name: str, state: str) -> None:
     match state:
